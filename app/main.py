@@ -10,7 +10,7 @@ Base.metadata.create_all(bind=engine)
 #aplication runs
 app = FastAPI()
 
-
+#tumama donado
 origins = ['*']
 
 app.add_middleware(
