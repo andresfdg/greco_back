@@ -74,3 +74,9 @@ def get_all_store_items(id:int,db:Session = Depends(get_db), current_user: int =
 
     return items   
 
+@router.get("/storeorder")
+def get_current_store_order(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
+    store = db.query(StoreDb).filter(StoreDb.owner == current_user.id).first()
+    orders = db.query(OrderDb).filter(OrderDb.store_id == store.id).all()
+    return orders    
+
