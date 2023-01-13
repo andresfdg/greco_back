@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from .schemas import *
 from .database import *
-from .router import order, auth, user, item, store
+from .router import order, auth, user, item, store, guield
 from fastapi.middleware.cors import CORSMiddleware
 
 #create the database
@@ -36,6 +36,8 @@ app.include_router(order.router)
 app.include_router(item.router)
 
 app.include_router(store.router)
+
+app.include_router(guield.router)
 
 
 

@@ -16,10 +16,11 @@ router = APIRouter()
 def create_item(payload:CreateItem, db:Session = Depends(get_db), current_user: int = Depends(get_user)):
     #create a hash for the password
 
+    store = db.query(StoreDb).filter(StoreDb.owner == current_user.id).first()
     #create a user using the payload information
     print(current_user.type)
     if  current_user.type == 'Store':
-        new_item = ItemDb(owner_store=current_user.id,**payload.dict())
+        new_item = ItemDb(owner_store=store.id,**payload.dict())
         db.add(new_item)
         db.commit()
         db.refresh(new_item)

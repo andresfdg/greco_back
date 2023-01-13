@@ -65,3 +65,5 @@ def infouser(db:Session = Depends(get_db),current_user: int = Depends(get_user))
         raise HTTPException(status_code=status.HTTP_202_ACCEPTED, detail=f'error')
 
     return user
+
+

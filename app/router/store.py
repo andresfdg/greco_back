@@ -76,7 +76,8 @@ def get_all_store_items(id:int,db:Session = Depends(get_db), current_user: int =
 
 @router.get("/storeorder")
 def get_current_store_order(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
-    store = db.query(StoreDb).filter(StoreDb.owner == current_user.id).first()
-    orders = db.query(OrderDb).filter(OrderDb.store_id == store.id).all()
+
+    cur.execute(f"""SELECT gield_id, sum(gield_id) FROM orders WHERE orders.owner_id = {str(current_user.id)} group by gield_id """)
+    orders = cur.fetchall()
     return orders    
 
