@@ -77,7 +77,17 @@ def get_all_store_items(id:int,db:Session = Depends(get_db), current_user: int =
 @router.get("/storeorder")
 def get_current_store_order(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
 
-    cur.execute(f"""SELECT gield_id, sum(gield_id) FROM orders WHERE orders.owner_id = {str(current_user.id)} group by gield_id """)
+    cur.execute(f"""SELECT numericalguiel.item, orders.gield_id, numericalguiel.order_number, items.name , items.price FROM orders LEFT JOIN numericalguiel ON orders.gield_id = numericalguiel.id LEFT JOIN items ON numericalguiel.item = items.id  WHERE orders.owner_id = {str(current_user.id)}""")
     orders = cur.fetchall()
+    return orders
+
+@router.get("/storeord")
+def store_orders(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
+
+    cur.execute(f"""SELECT orders.item, orders.quantity, items.name, items.price, users.name as us FROM orders LEFT JOIN items ON orders.item = items.id LEFT JOIN users ON orders.owner_id = users.id  WHERE orders.store_id = {str(current_user.id)}""")
+    orders = cur.fetchall()
+
+
     return orders    
+
 

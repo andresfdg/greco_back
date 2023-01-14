@@ -30,6 +30,9 @@ class ItemDb(Base):
     discount_low=Column(Integer, nullable = False)
     discount_medium=Column(Integer, nullable = False)
     discount_high=Column(Integer, nullable = False)
+    discount_low=Column(Integer, nullable = False)
+    discount_medium=Column(Integer, nullable = False)
+    discount_high=Column(Integer, nullable = False)
 
 class GuildDb(Base):
     __tablename__="numericalguiel"
