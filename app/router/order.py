@@ -20,49 +20,21 @@ def create_new_order(payload:OrderCreation,db:Session = Depends(get_db),current_
 
     gremio_exist = db.query(GuildDb).filter(GuildDb.item == item.id).first()
 
-    if not gremio_exist:
-        new_gremio = GuildDb(item = payload.item, pop_max=quantity)
-        db.add(new_gremio)
-        db.commit()
-        db.refresh(new_gremio)
-        new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
-        db.add(new_gremio)
-        db.commit()
-        db.refresh(new_gremio)
-    
-    if gremio_exist:
-        gremio_active = db.query(GuildDb).filter(GuildDb.item == item.id and GuildDb.active == True).first()
-        if not gremio_active:
-            new_gremio = GuildDb(item = payload.item, pop_max=quantity)
-            db.add(new_gremio)
-            db.commit()
-            db.refresh(new_gremio)    
-            new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
-            db.add(new_order)
-            db.commit()
-            db.refresh(new_order)
-
-        if gremio_active:
-            
-            cur.execute(f"""SELECT SUM(quantity) FROM orders WHERE orders.gield_id = {str(gremio_active.id)}""")
-            actual_quantity = cur.fetchone()
-            actual_quantity = list(actual_quantity.items())
-
-            if(int(actual_quantity[0][1]) + int(payload.quantity) > gremio_active.pop_max):
-                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-            if(actual_quantity[0][1] + payload.quantity == gremio_active.pop_max):
-                gremio_active.active = False
-                gremio_active.order_number = gremio_active.order_number + 1
-                new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
-                db.add(new_order)
-                db.commit()
-                db.refresh(new_order)
+   
+    new_gremio = GuildDb(item = payload.item, pop_max=quantity)
+    db.add(new_gremio)
+    db.commit()
+    db.refresh(new_gremio)
+    new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
+    db.add(new_gremio)
+    db.commit()
+    db.refresh(new_gremio)
+   
     
 
    
 
-    return "well"
+    return new_order
 
 # get all orders
 @router.get("/all_orders")                
