@@ -77,17 +77,36 @@ def get_all_store_items(id:int,db:Session = Depends(get_db), current_user: int =
 @router.get("/storeorder")
 def get_current_store_order(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
 
-    cur.execute(f"""SELECT numericalguiel.item, orders.gield_id, numericalguiel.order_number, items.name , items.price FROM orders LEFT JOIN numericalguiel ON orders.gield_id = numericalguiel.id LEFT JOIN items ON numericalguiel.item = items.id  WHERE orders.owner_id = {str(current_user.id)}""")
+    cur.execute(f"""SELECT numericalguiel.item, orders.gield_id,numericalguiel.pop_max,numericalguiel.active, numericalguiel.order_number, items.name, items.price FROM orders LEFT JOIN numericalguiel ON orders.gield_id = numericalguiel.id LEFT JOIN items ON numericalguiel.item = items.id  WHERE orders.owner_id = {str(current_user.id)}""")
     orders = cur.fetchall()
     return orders
 
 @router.get("/storeord")
 def store_orders(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
 
-    cur.execute(f"""SELECT orders.item, orders.quantity, items.name, items.price, users.name as us FROM orders LEFT JOIN items ON orders.item = items.id LEFT JOIN users ON orders.owner_id = users.id  WHERE orders.store_id = {str(current_user.id)}""")
+    cur.execute(f"""SELECT orders.item,orders.gield_id, orders.quantity, items.name, items.price FROM orders LEFT JOIN items ON orders.item = items.id LEFT JOIN users ON orders.owner_id = users.id  WHERE orders.store_id = {str(current_user.id)}""")
     orders = cur.fetchall()
 
 
-    return orders    
+    return orders
+
+
+@router.get("/storegield")
+def store_gield(db:Session = Depends(get_db), current_user: int = Depends(get_user)):
+
+    cur.execute(f"""SELECT orders.item,orders.gield_id,items.name,items.price,items.discount_low,items.discount_medium,items.discount_high, SUM(orders.quantity) as totalq, COUNT(*) as total_ord   FROM orders  LEFT JOIN items ON orders.item = items.id LEFT JOIN users ON orders.owner_id = users.id WHERE orders.store_id = {str(current_user.id)}  GROUP BY orders.item,orders.gield_id,items.name,items.price,items.discount_low,items.discount_medium,items.discount_high""")
+    gields = cur.fetchall()
+    return gields
+
+
+@router.get("/storegieldorder/{id}")
+def storegieldorder(id:int,db:Session = Depends(get_db), current_user: int = Depends(get_user)):
+
+    cur.execute(f"""SELECT item,quantity,discount,name,email,phone, city,adress FROM orders LEFT JOIN users ON orders.owner_id = users.id   WHERE orders.gield_id = {str(id)} """)
+    users = cur.fetchall()
+    return users
+
+
+
 
 

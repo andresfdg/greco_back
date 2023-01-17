@@ -30,19 +30,21 @@ class ItemDb(Base):
     discount_low=Column(Integer, nullable = False)
     discount_medium=Column(Integer, nullable = False)
     discount_high=Column(Integer, nullable = False)
-    discount_low=Column(Integer, nullable = False)
-    discount_medium=Column(Integer, nullable = False)
-    discount_high=Column(Integer, nullable = False)
+    quantity_low=Column(Integer, nullable = False , server_default='10') #pop --- population
+    quantity_medium=Column(Integer, nullable = False, server_default='20') #pop --- population
+    quantity_high=Column(Integer, nullable = False, server_default='30') #pop --- population
 
 class GuildDb(Base):
     __tablename__="numericalguiel"
 
     id = Column(Integer, primary_key = True, nullable=False)
     date = Column(TIMESTAMP(timezone=True),nullable=False,server_default = text('now()'))
-    active = Column(Boolean, server_default='False',nullable = False)
+    active = Column(Boolean, server_default='True',nullable = False)
     item = Column(Integer, ForeignKey('items.id'))
     order_number = Column(Integer, server_default= '1' )
-
+    pop_max = Column(Integer, server_default= '0')
+    discount = Column(Integer, server_default= '0')
+ 
 class StoreDb(Base):
     __tablename__="stores"
 

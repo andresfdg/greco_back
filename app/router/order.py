@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import *
 from ..models.ecommerceModels import *
@@ -14,46 +14,55 @@ router = APIRouter()
 @router.post("/create_new_order")
 def create_new_order(payload:OrderCreation,db:Session = Depends(get_db),current_user: int = Depends(get_user)):
 
-    order_item = db.query(ItemDb).filter(ItemDb.id == payload.item).first()
-        
-    popularity = order_item.actual_popularity
+    item = db.query(ItemDb).filter(ItemDb.id == payload.item).first()
 
-    dicount = 0
+    quantity = item.quantity_low
 
-    if popularity == 'low':
-        dicount = order_item.discount_low
-    if popularity == 'medium':
-        dicount = order_item.discount_medium
-    if popularity == 'high':
-        dicount = order_item.discount_high 
+    gremio_exist = db.query(GuildDb).filter(GuildDb.item == item.id).first()
 
-    gremio_validado = db.query(GuildDb).filter(GuildDb.item == payload.item)
+    if not gremio_exist:
+        new_gremio = GuildDb(item = payload.item, pop_max=quantity)
+        db.add(new_gremio)
+        db.commit()
+        db.refresh(new_gremio)
+        new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
+        db.add(new_gremio)
+        db.commit()
+        db.refresh(new_gremio)
+    
+    if gremio_exist:
+        gremio_active = db.query(GuildDb).filter(GuildDb.item == item.id and GuildDb.active == True).first()
+        if not gremio_active:
+            new_gremio = GuildDb(item = payload.item, pop_max=quantity)
+            db.add(new_gremio)
+            db.commit()
+            db.refresh(new_gremio)    
+            new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
+            db.add(new_order)
+            db.commit()
+            db.refresh(new_order)
 
+        if gremio_active:
+            
+            cur.execute(f"""SELECT SUM(quantity) FROM orders WHERE orders.gield_id = {str(gremio_active.id)}""")
+            actual_quantity = cur.fetchone()
+            actual_quantity = list(actual_quantity.items())
+
+            if(int(actual_quantity[0][1]) + int(payload.quantity) > gremio_active.pop_max):
+                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+            if(actual_quantity[0][1] + payload.quantity == gremio_active.pop_max):
+                gremio_active.active = False
+                gremio_active.order_number = gremio_active.order_number + 1
+                new_order = OrderDb(store_id=item.owner_store, discount=5 ,owner_id=current_user.id,gield_id=new_gremio.id  ,**payload.dict())
+                db.add(new_order)
+                db.commit()
+                db.refresh(new_order)
     
 
-    #this if is use to comprobate if a gremio exist for the order product
-    if not gremio_validado.first():
-        gremio = GuildDb(item = payload.item)
-        db.add(gremio)
-        db.commit()
-        db.refresh(gremio)
-      
+   
 
-        new_post = OrderDb(store_id=order_item.owner_store, discount=dicount ,owner_id=current_user.id,gield_id=gremio.id  ,**payload.dict()) 
-
-    #if the gremio exist increment the order_number     
-    else:   #gre = gremio in database
-        x = gremio_validado.first()    
-        x.order_number = x.order_number + 1
-        #new_post = OrderDb(owner_id=current_user.id,gield_id=x.id  ,**payload.dict())
-        new_post = OrderDb(store_id=order_item.owner_store, discount=dicount ,owner_id=current_user.id,gield_id=x.id  ,**payload.dict())  
-    #new order created
-        
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-
-    return new_post
+    return "well"
 
 # get all orders
 @router.get("/all_orders")                
